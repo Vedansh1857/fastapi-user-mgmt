@@ -32,16 +32,38 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@router.post("/register/", status_code=201)
+# @router.post("/register/", response_model=UserResponse, status_code=201)
+# def register_user(user: UserCreate, db: Session = Depends(get_db)):
+#     # Hash password before storing
+#     hashed_password = hash_password(user.password)
+    
+#     user_repo = UserRepository(db)
+#     db_user = user_repo.create_user(user, hashed_password)
+    
+#     if db_user:
+#         return db_user
+#     raise HTTPException(status_code=400, detail="User could not be created")
+
+@router.post("/register", response_model=UserResponse, status_code=201)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Hash password before storing
+    # Check if the email already exists in the database
+    user_repo = UserRepository(db)
+    existing_user = user_repo.get_user_by_email(user.email)
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400, 
+            detail="Email already registered"
+        )
+    
+    # Hash the password before storing it
     hashed_password = hash_password(user.password)
     
-    user_repo = UserRepository(db)
+    # Create the new user
     db_user = user_repo.create_user(user, hashed_password)
-    
+
     if db_user:
-        return {"message": "User created successfully"}
+        return db_user  # Return the newly created user with role
     raise HTTPException(status_code=400, detail="User could not be created")
 
 # Login API
@@ -54,7 +76,19 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Create JWT token if the password is correct
-    access_token = create_access_token(data={"sub": db_user.email})
+    # access_token = create_access_token(data={"sub": db_user.email})
+
+    # Create access token with all necessary user fields
+    access_token = create_access_token(
+        data={
+            "sub": db_user.email,
+            "id": db_user.id,
+            "name": db_user.name,
+            "email": db_user.email,
+            "phone": db_user.phone,
+            "role": db_user.role
+        }
+    )
     refresh_token = create_refresh_token(data={"sub": db_user.email})
 
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}

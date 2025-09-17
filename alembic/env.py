@@ -3,7 +3,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 # Import your models and Base object here
-from app.db.sessions import Base  # Update this import based on your project structure
+from app.models import Base  # Update this import based on your project structure
 
 # Alembic Config object
 config = context.config

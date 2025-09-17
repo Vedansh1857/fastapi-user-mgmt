@@ -1,4 +1,6 @@
 # Import models here
-from .users import User  # Ensure you're importing the User model from users.py
+from sqlalchemy.ext.declarative import declarative_base
 
 # You can import other models in the same way
+
+Base = declarative_base()

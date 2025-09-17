@@ -1,8 +1,8 @@
-"""Add user and phone column
+"""Fix ForeignKey import and relationship
 
-Revision ID: 471bf81143d0
-Revises: 358cca7f6069
-Create Date: 2025-09-17 05:47:07.085975
+Revision ID: 58706e924022
+Revises: bc65883bd35a
+Create Date: 2025-09-17 15:24:39.942646
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '471bf81143d0'
-down_revision: Union[str, Sequence[str], None] = '358cca7f6069'
+revision: str = '58706e924022'
+down_revision: Union[str, Sequence[str], None] = 'bc65883bd35a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

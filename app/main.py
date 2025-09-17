@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from app.core.config import settings
-from app.core.logging import logger
 from app.core.exceptions import http_error_handler
 from app.api.users import router as user_router
+from app.api.coach import router as coach_router
+from app.api.coachee import router as coachee_router
 
 app = FastAPI(title=settings.app_name)
 
@@ -16,3 +17,5 @@ def health_check():
 
 # Include user-related routes
 app.include_router(user_router, prefix="/api", tags=["users"])
+app.include_router(coach_router, prefix="/api", tags=["coach"])
+app.include_router(coachee_router, prefix="/api", tags=["coachee"])

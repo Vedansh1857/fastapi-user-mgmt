@@ -1,6 +1,6 @@
 from app.schemas.coach_profile import CoachProfileCreate, CoachProfileUpdate, CoachProfileResponse
 from app.models.coach_profile import CoachProfile
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.dependency.auth import role_required
 from app.schemas.user_schema import UserResponse
 from app.db.sessions import SessionLocal
@@ -84,3 +84,53 @@ def update_coach_profile(
     db.refresh(existing_profile)
 
     return existing_profile
+
+# 3. Get Coach Profile
+@router.get("/coach-profile", response_model=CoachProfileResponse)
+def get_coach_profile(db: Session = Depends(get_db), current_user: User = Depends(get_user_from_token)):
+    if current_user.role != "coach":
+        raise HTTPException(status_code=403, detail="Only coaches can view their profile")
+    
+    profile = db.query(CoachProfile).filter(CoachProfile.user_id == current_user.id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Coach profile not found")
+    
+    return profile
+
+# 4. Delete Coach Profile
+@router.delete("/coach-profile", status_code=204)
+def delete_coach_profile(db: Session = Depends(get_db), current_user: User = Depends(get_user_from_token)):
+    if current_user.role != "coach":
+        raise HTTPException(status_code=403, detail="Only coaches can delete their profile")
+    
+    profile = db.query(CoachProfile).filter(CoachProfile.user_id == current_user.id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Coach profile not found")
+    
+    db.delete(profile)
+    db.commit()
+
+    return {"message": "Profile deleted successfully"}
+
+# Search/Filter Coaches
+@router.get("/search-coaches", response_model=list[CoachProfileResponse])
+def search_coaches(
+    expertise: str = Query(None, alias="expertise"),
+    availability: str = Query(None, alias="availability"),
+    location: str = Query(None, alias="location"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(CoachProfile)
+
+    if expertise:
+        query = query.filter(CoachProfile.expertise.ilike(f"%{expertise}%"))
+    
+    if availability:
+        query = query.filter(CoachProfile.availability == availability)
+    
+    if location:
+        query = query.filter(CoachProfile.location.ilike(f"%{location}%"))
+
+    coaches = query.all()
+    
+    return coaches
